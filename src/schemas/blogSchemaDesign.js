@@ -41,20 +41,6 @@ class BlogSchemaDesign {
         ],
         validate: [(arr) => arr.length <= 10, "Max 10 recent posts allowed"],
       },
-      // Following/Follwers
-      following: [
-        {
-          userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-          followedAt: { type: Date, default: Date.now },
-        },
-      ],
-
-      follwers: [
-        {
-          userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-          followedAt: { type: Date, default: Date.now },
-        },
-      ],
 
       // Settings
       settings: {
@@ -162,13 +148,6 @@ class BlogSchemaDesign {
           author: String,
           excerpt: String,
           createdAt: { type: Date, default: Date.now },
-        },
-      ],
-
-      likes: [
-        {
-          userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-          likedAt: { type: Date, default: Date.now },
         },
       ],
 
