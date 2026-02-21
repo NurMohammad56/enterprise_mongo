@@ -4,10 +4,9 @@ import { match } from "node:assert";
 export const dynamicPopulate = (model, id, populateOptions) => {
   let query = model.findById(id);
 
-  populateOptions.forEach((path) => {
-    query = query.populate(path);
+  populateOptions.forEach((option) => {
+    query = query.populate(option);
   });
-
   return query.lean();
 };
 
@@ -54,24 +53,33 @@ export const getPostWithOptional = async (postId, options = {}) => {
 };
 
 export const batchPopulate = async (documents, populateConfig) => {
-  const populateDocs = [];
+  const result = [...documents];
 
-  for (const doc of documents) {
-    let populateDoc = doc;
+  for (const config of populateConfig) {
+    const Model = mongoose.model(config.model);
 
-    for (const config of populateConfig) {
-      const Model = mongoose.model(config.model);
-      const populatedData = await Model.find({
-        _id: { $in: doc[config.localField] },
-      })
-        .select(config.select)
-        .lean();
+    // Collect ALL ids
+    const allIds = documents.flatMap((doc) => doc[config.localField] || []);
 
-      populateDoc[config.localField] = populatedData;
-    }
+    const uniqueIds = [...new Set(allIds.map((id) => id.toString()))];
 
-    populateDocs.push(populateDoc);
+    const populatedData = await Model.find({
+      _id: { $in: uniqueIds },
+    })
+      .select(config.select)
+      .lean();
+
+    const dataMap = new Map(
+      populatedData.map((item) => [item._id.toString(), item]),
+    );
+
+    // Map back
+    result.forEach((doc) => {
+      doc[config.localField] = (doc[config.localField] || []).map((id) =>
+        dataMap.get(id.toString()),
+      );
+    });
   }
 
-  return populateDocs;
+  return result;
 };
